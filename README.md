@@ -12,7 +12,7 @@
 | Путь | Что это |
 |---|---|
 | `niri/` | Конфиг композитора niri (биндинги, анимации, layout) |
-| `waybar/` | Бар: `config` (модули), `style.css` (тема), `cava.sh`, `window_pill.py` |
+| `waybar/` | Бар: `config` (модули), `style.css` (тема), `cava.sh`, `window_pill.py`, `scripts/` (меню питания) |
 | `kitty/` | Терминал kitty |
 | `alacritty/` | Терминал alacritty (запасной) |
 | `fuzzel/` | Лаунчер приложений |
@@ -22,8 +22,9 @@
 | `gtklock/` | Экран блокировки (config + стиль) |
 | `README.md` | Этот файл |
 
-> ⚠️ Скрипты бара — `~/.local/bin/fuzzel-powermenu` и `~/.local/bin/poweroff-confirm` —
-> в репозитории не лежат. Если переносишь конфиги на другую машину, скопируй их отдельно.
+> ✅ Скрипты бара хранятся прямо в репозитории: `waybar/scripts/fuzzel-powermenu` и
+> `waybar/scripts/poweroff-confirm`. Конфиги ссылаются на них по путям внутри `~/.config/waybar/`,
+> поэтому отдельно ничего копировать не нужно — только сделать исполняемыми (см. шаг 5 ниже).
 
 ---
 
@@ -218,12 +219,10 @@ flatpak install flathub com.valvesoftware.Steam dev.zed.Zed org.videolan.VLC \
   org.vinegarhq.Sober org.pvermeer.WebAppHub ru.linux_gaming.PortProton
 ```
 
-**Шаг 5.** Скопировать скрипты бара (их нет в репо):
+**Шаг 5.** Скрипты бара уже в репозитории (`waybar/scripts/`) — просто сделай их исполняемыми:
 
 ```sh
-mkdir -p ~/.local/bin
-# перенеси fuzzel-powermenu и poweroff-confirm в ~/.local/bin
-chmod +x ~/.local/bin/fuzzel-powermenu ~/.local/bin/poweroff-confirm
+chmod +x ~/.config/waybar/scripts/*
 ```
 
 **Шаг 6.** Включить сервисы:

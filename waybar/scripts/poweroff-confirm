@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+ANSWER=$(printf "Да\nНет" | fuzzel \
+  --dmenu \
+  --prompt "Выключить? " \
+  --lines 2 \
+  --width 25 \
+  --anchor center)
+
+if [ "$ANSWER" = "Да" ]; then
+    systemctl poweroff
+fi

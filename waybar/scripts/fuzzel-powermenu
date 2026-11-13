@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+SELECTION=$(printf "⚿  Заблокировать\n⇥  Выйти из сессии\n☾  Сон\n↻  Перезагрузить\n⏻  Выключить" | fuzzel \
+  --dmenu \
+  --prompt "Питание: " \
+  --lines 5 \
+  --width 25 \
+  --anchor center)
+
+case "$SELECTION" in
+    *Заблокировать)
+        gtklock || swaylock
+        ;;
+    *"Выйти из сессии")
+        niri msg action quit || hyprctl dispatch exit 0 || swaymsg exit
+        ;;
+    *Сон)
+        systemctl suspend
+        ;;
+    *Перезагрузить)
+        systemctl reboot
+        ;;
+    *Выключить)
+        systemctl poweroff
+        ;;
+esac

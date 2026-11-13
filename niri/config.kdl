@@ -99,7 +99,7 @@ animations
 
 
 binds {
-    Mod+E { spawn "~/.local/bin/fuzzel-powermenu"; }
+    Mod+E { spawn "~/.config/waybar/scripts/fuzzel-powermenu"; }
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty --config-file=dotfiles/alacritty.toml"; }
