@@ -28,7 +28,7 @@
         "on-click": "activate"
     },
     "niri/window": {
-        "format": "  {}",
+        "format": "\ueb7f  {}",
         "max-length": 50,
         "separate-outputs": true,
         "rewrite": {
@@ -36,30 +36,30 @@
         }
     },
     "network": {
-        "format-wifi": "  {essid}",
-        "format-ethernet": "  {ipaddr}",
-        "format-linked": "  {ifname}",
-        "format-disconnected": "  offline",
+        "format-wifi": "\uf1eb  {essid}",
+        "format-ethernet": "\uef44  {ipaddr}",
+        "format-linked": "\uf0c1  {ifname}",
+        "format-disconnected": "\uf127  offline",
         "tooltip-format-wifi": "{essid} · {signalStrength}% · {frequency} MHz\n↓ {bandwidthDownBits}  ↑ {bandwidthUpBits}",
         "tooltip-format-ethernet": "{ifname} · {ipaddr}/{cidr}\nGW: {gwaddr}",
         "on-click": "nm-connection-editor",
         "interval": 5
     },
     "pulseaudio": {
-        "format": "{icon}{volume}%",
-        "format-bluetooth": "  {volume}%",
-        "format-bluetooth-muted": "  muted",
-        "format-muted": "  muted",
-        "format-source": "  {volume}%",
+        "format": "{icon} {volume}%",
+        "format-bluetooth": "\uf293  {volume}%",
+        "format-bluetooth-muted": "\uf294  muted",
+        "format-muted": "\uf026  muted",
+        "format-source": "\uf130  {volume}%",
         "format-source-muted": "",
         "format-icons": {
-            "bluetooth" : "🎧",
-            "headphone": "🎧",
-            "headset": "🔊",
-            "phone": "📱",
-            "portable": "🎧",
-            "car": "🚗",
-            "default": ["🔈", "🔉", "🔊"]
+            "bluetooth" : "\uf293",
+            "headphone": "\uf025",
+            "headset": "\uee59",
+            "phone": "\uf095",
+            "portable": "\uf025",
+            "car": "\uf1b9",
+            "default": ["\uf026", "\uf027", "\uf028"]
         },
         "scroll-step": 5,
         "on-click": "systemsettings kcm_pulseaudio",
@@ -114,15 +114,15 @@
         "format": "{icon} {capacity}%",
         "format-discharging": "{icon} {capacity}%",
         "format-charging": "{icon} {capacity}%",
-        "format-plugged": "🔌 {capacity}%",
-        "format-full": "🔋 Full",
-        "format-not-charging": "⏸ {capacity}%",
-        "format-unknown": "❓ {capacity}%",
+        "format-plugged": "\uf1e6 {capacity}%",
+        "format-full": "\uf240 Full",
+        "format-not-charging": "\uf04c {capacity}%",
+        "format-unknown": "\uf128 {capacity}%",
 
-        "format-warning": "⚠ {icon} {capacity}%",
-        "format-critical": "🔥 {icon} {capacity}%",
-        "format-charging-critical": "⚡ {icon} {capacity}%",
-        "format-charging-warning": "⚡ {icon} {capacity}%",
+        "format-warning": "\uf071 {icon} {capacity}%",
+        "format-critical": "\uf06d {icon} {capacity}%",
+        "format-charging-critical": "\uf0e7 {icon} {capacity}%",
+        "format-charging-warning": "\uf0e7 {icon} {capacity}%",
 
         "format-icons": {
             "default":  ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
@@ -138,7 +138,7 @@
     },
     "backlight": {
         "device": "intel_backlight",
-        "format": "🔆{percent}%",
+        "format": "{icon} {percent}%",
         "format-icons": ["󰃞", "󰃟", "󰃠"],
         "on-scroll-up": "brightnessctl set 1%+",
         "on-scroll-down": "brightnessctl set 1%-",
@@ -148,7 +148,7 @@
         "thermal-zone": 0,
         "critical-threshold": 80,
         "format": "{temperatureC}°C",
-        "format-critical": "🔥 {temperatureC}°C",
+        "format-critical": "\uf06d {temperatureC}°C",
         "tooltip": true,
         "tooltip-format": "CPU: {temperatureC}°C"
     },
@@ -156,7 +156,7 @@
         "hwmon-path": "/sys/class/hwmon/hwmon3/temp1_input",
         "critical-threshold": 90,
         "format": "{temperatureC}°C",
-        "format-critical": "🔥 {temperatureC}°C",
+        "format-critical": "\uf06d {temperatureC}°C",
         "tooltip": true,
         "tooltip-format": "GPU: {temperatureC}°C"
     }
