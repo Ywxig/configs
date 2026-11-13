@@ -1,0 +1,212 @@
+# Alacritty Configuration
+# Формат: TOML (актуальный, начиная с версии 0.12+)
+
+[general]
+# Импорт дополнительных конфигов (опционально)
+# import = ["~/.config/alacritty/theme.toml"]
+
+[env]
+TERM = "xterm-256color"
+
+[window]
+# Размер при запуске (в символах)
+dimensions = { columns = 120, lines = 35 }
+# Отступы внутри окна (в пикселях)
+padding = { x = 8, y = 8 }
+
+# Декорации окна: "Full" | "None" | "Transparent" | "Buttonless"
+decorations = "Full"
+
+# Прозрачность окна (0.0 - полностью прозрачное, 1.0 - непрозрачное)
+opacity = 1.0
+
+# Blur под окном (требует поддержки композитора)
+# blur = true
+
+# Заголовок окна
+title = "Alacritty"
+dynamic_title = true
+
+# Класс окна (для WM/compositor правил)
+class = { instance = "Alacritty", general = "Alacritty" }
+
+[scrolling]
+# История прокрутки (0 = отключено)
+history = 10000
+# Количество строк за одну прокрутку
+multiplier = 3
+
+[font]
+# Основной шрифт (измените на установленный у вас)
+normal = { family = "JetBrains Mono", style = "Regular" }
+bold   = { family = "JetBrains Mono", style = "Bold" }
+italic = { family = "JetBrains Mono", style = "Italic" }
+bold_italic = { family = "JetBrains Mono", style = "Bold Italic" }
+
+# Размер шрифта
+size = 11.0
+
+# Тонкая настройка
+[font.offset]
+x = 0
+y = 0
+
+[font.glyph_offset]
+x = 0
+y = 0
+
+# Рендеринг (Grayscale | SubpixelHorizontalRgb | SubpixelHorizontalBgr | SubpixelVerticalRgb | SubpixelVerticalBgr | None)
+
+[cursor]
+# Стиль курсора: Block | Underline | Beam
+style = { shape = "Block", blinking = "On" }
+vi_mode_style = { shape = "Block", blinking = "Off" }
+
+# Скорость мигания (мс)
+blink_interval = 750
+
+# Толщина курсора Beam (0.0–1.0)
+thickness = 0.15
+
+# Цвет курсора (если не использует цвета темы)
+# unfocused_hollow = true
+
+[terminal]
+# Оболочка по умолчанию (раскомментируйте нужную)
+# shell = "/bin/bash"
+# shell = "/bin/zsh"
+# shell = { program = "/bin/zsh", args = ["--login"] }
+# shell = { program = "/usr/bin/fish" }
+
+osc52 = "CopyPaste"
+
+[mouse]
+# Скрывать курсор мыши при вводе
+hide_when_typing = true
+
+[[mouse.bindings]]
+mouse    = "Right"
+action   = "ExpandSelection"
+
+[selection]
+# Снять выделение при выходе в нормальный режим vi
+save_to_clipboard = false
+# Семантические разделители для двойного клика
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+
+[keyboard]
+
+bindings = [
+  # Копировать / вставить
+  { key = "C", mods = "Control|Shift", action = "Copy" },
+  { key = "V", mods = "Control|Shift", action = "Paste" },
+  { key = "С", mods = "Control|Shift", action = "Copy" },
+  { key = "М", mods = "Control|Shift", action = "Paste" },
+
+  # Вставить из первичного буфера (X11)
+  { key = "Insert", mods = "Shift", action = "PasteSelection" },
+
+  # Очистить экран
+  { key = "L", mods = "Control", action = "ClearLogNotice" },
+  { key = "L", mods = "Control", chars = "\f" },
+
+  # Скроллинг
+  { key = "PageUp",   mods = "Shift", action = "ScrollPageUp" },
+  { key = "PageDown", mods = "Shift", action = "ScrollPageDown" },
+  { key = "Home",     mods = "Shift", action = "ScrollToTop" },
+  { key = "End",      mods = "Shift", action = "ScrollToBottom" },
+
+  # Размер шрифта
+  { key = "=",  mods = "Control", action = "IncreaseFontSize" },
+  { key = "Minus",  mods = "Control", action = "DecreaseFontSize" },
+  { key = "Key0",   mods = "Control", action = "ResetFontSize" },
+
+  # Режим поиска
+  { key = "F", mods = "Control|Shift", action = "SearchForward" },
+  { key = "B", mods = "Control|Shift", action = "SearchBackward" },
+
+  # Vi режим
+  { key = "Space", mods = "Control|Shift", action = "ToggleViMode" },
+]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Цветовая схема — Catppuccin Mocha (популярная тёмная тема)
+# Замените секцию [colors] для другой темы
+# ─────────────────────────────────────────────────────────────────────────────
+
+[colors.primary]
+background = "#141414"
+foreground = "#cdd6f4"
+dim_foreground = "#7f849c"
+bright_foreground = "#cdd6f4"
+
+[colors.cursor]
+text   = "#1e1e2e"
+cursor = "#f5e0dc"
+
+[colors.vi_mode_cursor]
+text   = "#1e1e2e"
+cursor = "#b4befe"
+
+[colors.search.matches]
+foreground = "#1e1e2e"
+background = "#a6adc8"
+
+[colors.search.focused_match]
+foreground = "#1e1e2e"
+background = "#a6e3a1"
+
+[colors.footer_bar]
+background = "#585b70"
+foreground = "#cdd6f4"
+
+[colors.hints.start]
+foreground = "#1e1e2e"
+background = "#f9e2af"
+
+[colors.hints.end]
+foreground = "#1e1e2e"
+background = "#a6adc8"
+
+[colors.selection]
+text       = "#1e1e2e"
+background = "#f5e0dc"
+
+[colors.normal]
+black   = "#45475a"
+red     = "#f38ba8"
+green   = "#a6e3a1"
+yellow  = "#f9e2af"
+blue    = "#89b4fa"
+magenta = "#f5c2e7"
+cyan    = "#94e2d5"
+white   = "#bac2de"
+
+[colors.bright]
+black   = "#585b70"
+red     = "#f38ba8"
+green   = "#a6e3a1"
+yellow  = "#f9e2af"
+blue    = "#89b4fa"
+magenta = "#f5c2e7"
+cyan    = "#94e2d5"
+white   = "#a6adc8"
+
+[colors.dim]
+black   = "#45475a"
+red     = "#f38ba8"
+green   = "#a6e3a1"
+yellow  = "#f9e2af"
+blue    = "#89b4fa"
+magenta = "#f5c2e7"
+cyan    = "#94e2d5"
+white   = "#bac2de"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bell
+# ─────────────────────────────────────────────────────────────────────────────
+
+[bell]
+animation = "EaseOutExpo"
+duration  = 0
+color     = "#f38ba8"

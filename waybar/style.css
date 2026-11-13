@@ -1,0 +1,149 @@
+/* ============ Палитра (синие акценты) ============ */
+@define-color bg      #1a1b26;
+@define-color fg      #c0caf5;
+@define-color muted   #565f89;
+@define-color accent  #7aa2f7;
+@define-color accent2 #7dcfff;
+@define-color red     #f2555a;
+@define-color green   #a6e3a1;
+@define-color yellow  #f9e2af;
+
+/* Фон самого бара (тёмно-серый) */
+@define-color bar_bg  #2b2b2b;
+
+* {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  font-family: 'JetBrainsMono Nerd Font Propo';
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.25s ease-in-out;
+}
+
+window#waybar {
+  color: @fg;
+  background-color: alpha(@bar_bg, 0.85);
+}
+
+window#waybar.hidden { opacity: 0.2; }
+
+/* Всё лежит в modules-center, поэтому сам контейнер прозрачный,
+   а «островками» делаем отдельные блоки */
+.modules-center {
+  background: transparent;
+  margin: 4px 0 2px 0;
+}
+
+tooltip {
+  background: alpha(@bg, 0.95);
+  border: 1.5px solid alpha(@accent, 0.7);
+  border-radius: 10px;
+  padding: 6px;
+}
+tooltip label { color: @fg; font-weight: normal; }
+
+/* ============ Островки ============ */
+#workspaces,
+#clock,
+#mpris,
+#left,
+#center {
+  background: alpha(@bg, 0.88);
+  border: 1px solid alpha(@fg, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  margin: 0 4px;
+  min-height: 24px;
+}
+
+#clock, #mpris { padding: 0 12px; }
+#left   { padding: 0 6px; }
+#center { padding: 0 4px; }
+
+/* ============ Воркспейсы ============ */
+#workspaces button {
+  color: @muted;
+  background: transparent;
+  padding: 2px 8px;
+  margin: 3px 2px;
+  border-radius: 12px;
+  box-shadow: none;
+}
+#workspaces button:hover { color: @bg; background: alpha(@accent, 0.85); }
+#workspaces button.active {
+  color: @bg;
+  background: linear-gradient(135deg, @accent, @accent2);
+  padding: 2px 14px;
+}
+#workspaces button.urgent { color: @bg; background: @red; }
+#workspaces button.empty { opacity: 0.4; }
+#workspaces button.empty.active { opacity: 1; }
+
+/* ============ Модули внутри групп ============ */
+#backlight, #bluetooth, #network, #pulseaudio, #memory, #cpu, #battery,
+#tray, #mpris,
+#custom-idle-indicator,
+#custom-notification-silencing-indicator,
+#custom-screenrecording-indicator,
+#custom-update, #custom-updatespacman, #custom-voxtype {
+  background: transparent;
+  color: @fg;
+  padding: 0 8px;
+  margin: 3px 1px;
+  min-width: 14px;
+  border-radius: 12px;
+}
+
+#backlight:hover, #bluetooth:hover, #network:hover, #pulseaudio:hover,
+#memory:hover, #cpu:hover, #battery:hover {
+  background: alpha(@fg, 0.1);
+}
+
+#cpu, #memory { min-width: 45px; }
+#tray { padding: 0 6px; }
+#tray > .needs-attention { -gtk-icon-effect: highlight; background: alpha(@red, 0.4); }
+
+#custom-windowpill { min-width: 180px; padding: 0 8px; }
+#custom-separator  { opacity: 0.2; padding: 2px 4px 0 4px; }
+
+/* ============ Индикаторы ============ */
+#custom-idle-indicator.active,
+#custom-notification-silencing-indicator.active,
+#custom-voxtype.recording { color: @red; }
+
+#custom-screenrecording-indicator { color: transparent; animation: blink-rec 0.6s linear infinite alternate; }
+#custom-screenrecording-indicator.active { color: @red; }
+@keyframes blink-rec { to { color: @bg; } }
+
+/* ============ Батарея ============ */
+#battery.charging, #battery.plugged { color: @green; }
+#battery.warning:not(.charging) { color: @yellow; }
+#battery.critical:not(.charging) {
+  color: @red;
+  animation: blink-crit 0.6s steps(12) infinite alternate;
+}
+@keyframes blink-crit { to { background: @red; color: @bg; } }
+
+/* ============ Кнопка питания ============ */
+#custom-power {
+  background: alpha(@bg, 0.88);
+  color: @accent;
+  border: 1px solid alpha(@fg, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  margin: 0 4px;
+  padding: 0 12px;
+  min-height: 24px;
+  min-width: 14px;
+  font-size: 30px;
+}
+
+#custom-power:hover {
+  background: @red;
+  color: @bg;
+  font-size: 30px;
+  border-color: alpha(@red, 0.6);
+}

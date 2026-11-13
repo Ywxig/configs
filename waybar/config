@@ -1,0 +1,163 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 36,
+    "spacing": 4,
+    "modules-left": ["image#logo", "custom/power", "niri/workspaces", "temperature#cpu", "temperature#gpu"],
+    "modules-center": ["niri/window"],
+    "modules-right": ["network", "backlight", "pulseaudio", "niri/language", "keyboard-state", "clock", "battery"],
+
+    "image#logo": {
+        "path": "/home/dima/.config/fastfetch/logo-arch.png",
+        "size": 24,
+        "interval": 5,
+        "on-click": "~/.local/bin/fuzzel-powermenu"
+    },
+
+    "custom/power": {
+        "format": "⏻",
+        "on-click": "poweroff-confirm"
+    },
+
+    "niri/workspaces": {
+        "format": "{icon}",
+        "format-icons": {
+            "active": "●",
+            "default": "○"
+        },
+        "on-click": "activate"
+    },
+    "niri/window": {
+        "format": "  {}",
+        "max-length": 50,
+        "separate-outputs": true,
+        "rewrite": {
+            "(.*) — (.*)": "$1"
+        }
+    },
+    "network": {
+        "format-wifi": "  {essid}",
+        "format-ethernet": "  {ipaddr}",
+        "format-linked": "  {ifname}",
+        "format-disconnected": "  offline",
+        "tooltip-format-wifi": "{essid} · {signalStrength}% · {frequency} MHz\n↓ {bandwidthDownBits}  ↑ {bandwidthUpBits}",
+        "tooltip-format-ethernet": "{ifname} · {ipaddr}/{cidr}\nGW: {gwaddr}",
+        "on-click": "nm-connection-editor",
+        "interval": 5
+    },
+    "pulseaudio": {
+        "format": "{icon}{volume}%",
+        "format-bluetooth": "  {volume}%",
+        "format-bluetooth-muted": "  muted",
+        "format-muted": "  muted",
+        "format-source": "  {volume}%",
+        "format-source-muted": "",
+        "format-icons": {
+            "bluetooth" : "🎧",
+            "headphone": "🎧",
+            "headset": "🔊",
+            "phone": "📱",
+            "portable": "🎧",
+            "car": "🚗",
+            "default": ["🔈", "🔉", "🔊"]
+        },
+        "scroll-step": 5,
+        "on-click": "systemsettings kcm_pulseaudio",
+        "tooltip": true,
+        "tooltip-format": "{desc}"
+    },
+    "niri/language": {
+        "format": "{}",
+        "format-en": "🇬🇧  En",
+        "format-ru": "🇷🇺  Ру",
+        "tooltip": false
+    },
+    "keyboard-state": {
+        "numlock": true,
+        "capslock": false,
+        "format": {
+            "numlock": "Num {icon}"
+        },
+        "format-icons": {
+            "locked": "●",
+            "unlocked": "○"
+        }
+    },
+    "clock": {
+        "interval": 1,
+        "format": "{:%I:%M:%S %p}",
+        "tooltip-format": "<big>{:%B %Y}</big>\n<tt><small>{calendar}</small></tt>",
+        "calendar": {
+            "mode": "month",
+            "weeks-pos": "left",
+            "format": {
+                "today": "<span color='#88C0D0'><b>{}</b></span>"
+            }
+        },
+        "actions": {
+            "on-click-right": "mode"
+        }
+    },
+    "battery": {
+        "bat": "BAT0",
+        "interval": 10,
+        "full-at": 98,
+        "states": {
+            "full": 100,
+            "good": 80,
+            "normal": 50,
+            "low": 30,
+            "warning": 20,
+            "critical": 10
+        },
+
+        "format": "{icon} {capacity}%",
+        "format-discharging": "{icon} {capacity}%",
+        "format-charging": "{icon} {capacity}%",
+        "format-plugged": "🔌 {capacity}%",
+        "format-full": "🔋 Full",
+        "format-not-charging": "⏸ {capacity}%",
+        "format-unknown": "❓ {capacity}%",
+
+        "format-warning": "⚠ {icon} {capacity}%",
+        "format-critical": "🔥 {icon} {capacity}%",
+        "format-charging-critical": "⚡ {icon} {capacity}%",
+        "format-charging-warning": "⚡ {icon} {capacity}%",
+
+        "format-icons": {
+            "default":  ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
+            "charging": ["\uf0e7 \uf244", "\uf0e7 \uf243", "\uf0e7 \uf242", "\uf0e7 \uf241", "\uf0e7 \uf240"]
+        },
+
+        "tooltip-format": "{capacity}% · {timeTo}\nМощность: {power:.1f} W\nИзношенность: {health}%\nЦиклы: {cycles}",
+        "tooltip-format-charging": "{capacity}% · до полной: {timeTo}\n{power:.1f} W",
+        "tooltip-format-discharging": "{capacity}% · осталось: {timeTo}\n{power:.1f} W",
+        "tooltip-format-full": "Заряжена полностью",
+
+        "on-click": "tlpui"
+    },
+    "backlight": {
+        "device": "intel_backlight",
+        "format": "🔆{percent}%",
+        "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "on-scroll-up": "brightnessctl set 1%+",
+        "on-scroll-down": "brightnessctl set 1%-",
+        "smooth-scrolling-threshold": 1
+    },
+    "temperature#cpu": {
+        "thermal-zone": 0,
+        "critical-threshold": 80,
+        "format": "{temperatureC}°C",
+        "format-critical": "🔥 {temperatureC}°C",
+        "tooltip": true,
+        "tooltip-format": "CPU: {temperatureC}°C"
+    },
+    "temperature#gpu": {
+        "hwmon-path": "/sys/class/hwmon/hwmon3/temp1_input",
+        "critical-threshold": 90,
+        "format": "{temperatureC}°C",
+        "format-critical": "🔥 {temperatureC}°C",
+        "tooltip": true,
+        "tooltip-format": "GPU: {temperatureC}°C"
+    }
+}

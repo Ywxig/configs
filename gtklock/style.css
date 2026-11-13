@@ -1,0 +1,111 @@
+/* ============ Палитра (синяя, как у Waybar и cava) ============ */
+@define-color bg      #172c43;
+@define-color bg-alt  #24283b;
+@define-color fg      #c0caf5;
+@define-color muted   #565f89;
+@define-color accent  #7aa2f7;
+@define-color accent2 #7dcfff;
+@define-color red     #f7768e;
+
+* {
+  font-family: 'JetBrainsMono Nerd Font Propo';
+  font-weight: bold;
+  transition: all 0.25s ease-in-out;
+}
+
+/* ============ Фон ============ */
+window {
+  background-color: @bg;
+  /* Для обоев раскомментируйте и укажите путь:
+  background-image: linear-gradient(rgba(26, 27, 38, 0.65), rgba(26, 27, 38, 0.65)),
+                    url("/home/USER/Pictures/wallpaper.jpg");
+  background-size: cover;
+  background-position: center;
+  */
+  color: @fg;
+}
+
+/* Центральная карточка */
+#window-box {
+  background: alpha(@bg, 0.8);
+  border: 1px solid alpha(@fg, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  padding: 32px 40px;
+}
+
+/* ============ Часы ============ */
+#clock-label {
+  color: @fg;
+  font-size: 5.5rem;
+  text-shadow: 0 2px 12px alpha(@accent, 0.45);
+  margin-bottom: 8px;
+}
+
+/* ============ Пользователь (модуль userinfo) ============ */
+#user-image {
+  border: 2px solid @accent;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+#user-name {
+  color: @accent2;
+  font-size: 1.2rem;
+}
+
+/* ============ Ввод пароля ============ */
+#input-label {
+  color: @muted;
+  font-size: 0.9rem;
+}
+
+#input-field {
+  background: alpha(@bg-alt, 0.9);
+  color: @fg;
+  caret-color: @accent;
+  border: 1px solid alpha(@accent, 0.4);
+  border-radius: 16px;
+  padding: 10px 16px;
+  min-width: 260px;
+  box-shadow: none;
+}
+
+#input-field:focus {
+  border-color: @accent;
+  box-shadow: 0 0 0 2px alpha(@accent, 0.3);
+}
+
+#unlock-button {
+  background: linear-gradient(135deg, @accent, @accent2);
+  color: @bg;
+  border: none;
+  border-radius: 16px;
+  padding: 10px 20px;
+  margin-top: 8px;
+}
+
+#unlock-button:hover {
+  box-shadow: 0 0 12px alpha(@accent, 0.6);
+}
+
+#error-label {
+  color: @red;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+/* ============ Модули (powerbar, playerctl), если подключены ============ */
+button {
+  background: alpha(@bg-alt, 0.9);
+  color: @fg;
+  border: 1px solid alpha(@fg, 0.08);
+  border-radius: 14px;
+  padding: 8px 14px;
+  margin: 4px;
+}
+
+button:hover {
+  background: @accent;
+  color: @bg;
+}
