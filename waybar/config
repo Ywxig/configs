@@ -119,14 +119,14 @@
         "format-not-charging": "\uf04c {capacity}%",
         "format-unknown": "\uf128 {capacity}%",
 
-        "format-warning": "\uf071 {icon} {capacity}%",
-        "format-critical": "\uf06d {icon} {capacity}%",
-        "format-charging-critical": "\uf0e7 {icon} {capacity}%",
-        "format-charging-warning": "\uf0e7 {icon} {capacity}%",
+        "format-warning": "\uf071 {capacity}%",
+        "format-critical": "\uf06d {capacity}%",
+        "format-charging-critical": "\uf0e7 {capacity}%",
+        "format-charging-warning": "\uf0e7 {capacity}%",
 
         "format-icons": {
             "default":  ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
-            "charging": ["\uf0e7 \uf244", "\uf0e7 \uf243", "\uf0e7 \uf242", "\uf0e7 \uf241", "\uf0e7 \uf240"]
+            "charging": ["\uf0e7 o\uf244", "\uf0e7 \uf243", "\uf0e7 \uf242", "\uf0e7 \uf241", "\uf0e7 \uf240"]
         },
 
         "tooltip-format": "{capacity}% · {timeTo}\nМощность: {power:.1f} W\nИзношенность: {health}%\nЦиклы: {cycles}",

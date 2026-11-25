@@ -76,10 +76,6 @@ window-rule {
     open-floating true
 }
 
-output "Philips Consumer Electronics Company PHL 244E5 UHB1436022291" {
-    transform "180"
-}
-
 
 spawn-at-startup "xsettingsd"
 spawn-at-startup "xwayland-satellite"
@@ -271,12 +267,21 @@ gestures {
         off
     }
 }
-output "HDMI-A-1" {
+output "Philips Consumer Electronics Company PHL 244E5 UHB1436022291" {
     mode "1920x1080@60.000"
 
     scale 1.0
 
     transform "180"
+    position x=5760 y=0
+
+}
+output "HDMI-A-1" {
+    mode "1920x1080@60.000"
+
+    scale 1.0
+
+    transform "normal"
     position x=5760 y=0
 
 }
