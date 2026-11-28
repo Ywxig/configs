@@ -83,7 +83,8 @@ tooltip label { color: @fg; font-weight: normal; }
 #workspaces button.empty.active { opacity: 1; }
 
 /* ============ Модули внутри групп ============ */
-#backlight, #bluetooth, #network, #pulseaudio, #memory, #cpu, #battery,
+#backlight, #bluetooth, #network, #pulseaudio, #custom-clipboard,
+#memory, #cpu, #battery,
 #tray, #mpris,
 #custom-idle-indicator,
 #custom-notification-silencing-indicator,
@@ -98,6 +99,7 @@ tooltip label { color: @fg; font-weight: normal; }
 }
 
 #backlight:hover, #bluetooth:hover, #network:hover, #pulseaudio:hover,
+#custom-clipboard:hover,
 #memory:hover, #cpu:hover, #battery:hover {
   background: alpha(@fg, 0.1);
 }

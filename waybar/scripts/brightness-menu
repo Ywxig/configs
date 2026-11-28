@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Меню яркости для клика по модулю backlight в waybar.
+
+set -u
+
+current=$(brightnessctl -m 2>/dev/null | cut -d, -f4)
+[ -z "$current" ] && current="?"
+
+choice=$(printf '󰃠  Текущая: %s\n󰃞  5%%\n󰃟  25%%\n󰃟  50%%\n󰃠  75%%\n󰃠  100%%' "$current" |
+  fuzzel --dmenu --prompt "Яркость: " --lines 6 --width 26 --anchor center)
+
+# Первая строка — информационная, по ней ничего не делаем.
+case "$choice" in
+  *Текущая*) exit 0 ;;
+esac
+
+value=$(printf '%s' "$choice" | grep -oE '[0-9]+%' | head -n1)
+[ -n "$value" ] && brightnessctl set "$value"

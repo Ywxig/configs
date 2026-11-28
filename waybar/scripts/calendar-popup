@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""Всплывающий календарь GTK3 + gtk-layer-shell (клик по часам в waybar)."""
+
+import datetime
+import locale
+import os
+import sys
+
+# Календарь рисует названия месяцев/дней через текущую локаль GTK.
+# Задаём её до инициализации GTK, иначе gtk_init перечитает системную (en_US).
+os.environ["LC_TIME"] = "ru_RU.UTF-8"
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GtkLayerShell", "0.1")
+from gi.repository import Gdk, Gio, GLib, Gtk, GtkLayerShell  # noqa: E402
+
+APP_ID = "org.dima.CalendarPopup"
+TEST_MODE = os.environ.get("CLIPBOARD_UI_TEST") == "1"
+TOP_MARGIN = int(os.environ.get("CALENDAR_POPUP_TOP_MARGIN", "44"))
+
+MONTHS = [
+    "января", "февраля", "марта", "апреля", "мая", "июня",
+    "июля", "августа", "сентября", "октября", "ноября", "декабря",
+]
+WEEKDAYS = [
+    "понедельник", "вторник", "среда", "четверг",
+    "пятница", "суббота", "воскресенье",
+]
+
+CSS = b"""
+window { background-color: transparent; }
+.panel {
+    background-color: rgba(26, 27, 38, 0.97);
+    border: 1px solid rgba(122, 162, 247, 0.55);
+    border-radius: 14px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+    padding: 14px;
+}
+.title { color: #7aa2f7; font-size: 16px; font-weight: bold; }
+.subtitle { color: #565f89; font-size: 11px; }
+calendar {
+    background: transparent;
+    color: #c0caf5;
+    border: none;
+    padding: 4px 0 0 0;
+}
+calendar:selected { background-color: #7aa2f7; color: #1a1b26; border-radius: 6px; }
+calendar.header { background: transparent; color: #c0caf5; }
+calendar.button { color: #7aa2f7; background: transparent; }
+calendar.highlight { color: #7aa2f7; font-weight: bold; }
+.footer { color: #565f89; font-size: 10px; margin-top: 6px; }
+"""
+
+
+class CalendarWindow(Gtk.Window):
+    def __init__(self, app):
+        super().__init__(type=Gtk.WindowType.TOPLEVEL)
+        self.app = app
+        self.set_decorated(False)
+        self.set_resizable(False)
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+        self.set_type_hint(Gdk.WindowTypeHint.DIALOG)
+        self.set_size_request(320, -1)
+
+        screen = self.get_screen()
+        visual = screen.get_rgba_visual()
+        if visual is not None:
+            self.set_visual(visual)
+        self.set_app_paintable(True)
+
+        GtkLayerShell.init_for_window(self)
+        GtkLayerShell.set_namespace(self, "calendar-popup")
+        GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+        GtkLayerShell.set_exclusive_zone(self, -1)
+        GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, True)
+        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, True)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, TOP_MARGIN)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, 8)
+
+        self.connect("destroy", self._on_destroy)
+        self.connect("key-press-event", self._on_key)
+
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        panel.get_style_context().add_class("panel")
+
+        today = datetime.date.today()
+        title = Gtk.Label(label=f"{today.day} {MONTHS[today.month - 1]}", xalign=0)
+        title.get_style_context().add_class("title")
+        subtitle = Gtk.Label(
+            label=f"{WEEKDAYS[today.weekday()]}, {today.year}",
+            xalign=0,
+        )
+        subtitle.get_style_context().add_class("subtitle")
+
+        calendar = Gtk.Calendar()
+        calendar.set_display_options(
+            Gtk.CalendarDisplayOptions.SHOW_HEADING
+            | Gtk.CalendarDisplayOptions.SHOW_DAY_NAMES
+        )
+
+        footer = Gtk.Label(label="Esc — закрыть", xalign=0)
+        footer.get_style_context().add_class("footer")
+
+        panel.pack_start(title, False, False, 0)
+        panel.pack_start(subtitle, False, False, 0)
+        panel.pack_start(calendar, False, False, 0)
+        panel.pack_start(footer, False, False, 0)
+        self.add(panel)
+
+        if TEST_MODE:
+            GLib.timeout_add(700, app.quit)
+
+    def _on_key(self, _widget, event):
+        if event.keyval == Gdk.KEY_Escape:
+            self.destroy()
+            return True
+        return False
+
+    def _on_destroy(self, _widget):
+        self.app.window = None
+        GLib.idle_add(self.app.quit)
+
+
+class CalendarApp(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=APP_ID, flags=Gio.ApplicationFlags.FLAGS_NONE)
+        self.window = None
+
+    def do_activate(self):
+        if self.window is None:
+            self.window = CalendarWindow(self)
+            self.add_window(self.window)
+        self.window.show_all()
+        self.window.present()
+
+
+def main():
+    try:
+        locale.setlocale(locale.LC_TIME, "ru_RU.utf8")
+    except locale.Error:
+        try:
+            locale.setlocale(locale.LC_TIME, "")
+        except locale.Error:
+            pass
+    app = CalendarApp()
+    return app.run(sys.argv)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

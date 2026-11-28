@@ -5,18 +5,20 @@
     "spacing": 4,
     "modules-left": ["image#logo", "custom/power", "niri/workspaces", "temperature#cpu", "temperature#gpu"],
     "modules-center": ["niri/window"],
-    "modules-right": ["network", "backlight", "pulseaudio", "niri/language", "keyboard-state", "clock", "battery"],
+    "modules-right": ["network", "backlight", "pulseaudio", "custom/clipboard", "niri/language", "keyboard-state", "clock", "battery"],
 
     "image#logo": {
         "path": "~/.config/waybar/logo-arch.png",
         "size": 24,
         "interval": 5,
-        "on-click": "~/.config/waybar/scripts/fuzzel-powermenu"
+        "on-click": "/home/dima/.config/waybar/scripts/fuzzel-powermenu"
     },
 
     "custom/power": {
         "format": "⏻",
-        "on-click": "~/.config/waybar/scripts/poweroff-confirm"
+        "tooltip": true,
+        "tooltip-format": "Меню питания",
+        "on-click": "/home/dima/.config/waybar/scripts/fuzzel-powermenu"
     },
 
     "niri/workspaces": {
@@ -40,9 +42,11 @@
         "format-ethernet": "\uef44  {ipaddr}",
         "format-linked": "\uf0c1  {ifname}",
         "format-disconnected": "\uf127  offline",
-        "tooltip-format-wifi": "{essid} · {signalStrength}% · {frequency} MHz\n↓ {bandwidthDownBits}  ↑ {bandwidthUpBits}",
-        "tooltip-format-ethernet": "{ifname} · {ipaddr}/{cidr}\nGW: {gwaddr}",
+        "tooltip-format-wifi": "{essid} · {signalStrength}% · {frequency} MHz\n↓ {bandwidthDownBits}  ↑ {bandwidthUpBits}\nЛКМ — настройки · ПКМ — Wi-Fi вкл/выкл",
+        "tooltip-format-ethernet": "{ifname} · {ipaddr}/{cidr}\nGW: {gwaddr}\nЛКМ — настройки · ПКМ — Wi-Fi вкл/выкл",
+        "tooltip-format-disconnected": "Нет подключения\nЛКМ — настройки · ПКМ — Wi-Fi вкл/выкл",
         "on-click": "nm-connection-editor",
+        "on-click-right": "nmcli radio wifi toggle",
         "interval": 5
     },
     "pulseaudio": {
@@ -53,7 +57,7 @@
         "format-source": "\uf130  {volume}%",
         "format-source-muted": "",
         "format-icons": {
-            "bluetooth" : "\uf293",
+            "bluetooth": "\uf293",
             "headphone": "\uf025",
             "headset": "\uee59",
             "phone": "\uf095",
@@ -62,9 +66,21 @@
             "default": ["\uf026", "\uf027", "\uf028"]
         },
         "scroll-step": 5,
-        "on-click": "systemsettings kcm_pulseaudio",
+        "on-click": "pavucontrol",
+        "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+        "on-scroll-up": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+",
+        "on-scroll-down": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",
         "tooltip": true,
-        "tooltip-format": "{desc}"
+        "tooltip-format": "{desc}\nЛКМ — микшер · ПКМ — выключить звук · колесо — громкость"
+    },
+    "custom/clipboard": {
+        "format": "󰅌 {}",
+        "exec": "/home/dima/.config/waybar/scripts/clipboard-daemon count",
+        "interval": 10,
+        "tooltip": true,
+        "tooltip-format": "История буфера обмена\nЛКМ — открыть · ПКМ — очистить",
+        "on-click": "/home/dima/.config/waybar/scripts/clipboard-ui",
+        "on-click-right": "/home/dima/.config/waybar/scripts/clipboard-daemon clear"
     },
     "niri/language": {
         "format": "{}",
@@ -94,9 +110,8 @@
                 "today": "<span color='#88C0D0'><b>{}</b></span>"
             }
         },
-        "actions": {
-            "on-click-right": "mode"
-        }
+        "on-click": "/home/dima/.config/waybar/scripts/calendar-popup",
+        "on-click-right": "/home/dima/.config/waybar/scripts/calendar-popup"
     },
     "battery": {
         "bat": "BAT0",
@@ -129,17 +144,22 @@
             "charging": ["\uf0e7 o\uf244", "\uf0e7 \uf243", "\uf0e7 \uf242", "\uf0e7 \uf241", "\uf0e7 \uf240"]
         },
 
-        "tooltip-format": "{capacity}% · {timeTo}\nМощность: {power:.1f} W\nИзношенность: {health}%\nЦиклы: {cycles}",
-        "tooltip-format-charging": "{capacity}% · до полной: {timeTo}\n{power:.1f} W",
-        "tooltip-format-discharging": "{capacity}% · осталось: {timeTo}\n{power:.1f} W",
+        "tooltip-format": "{capacity}% · {timeTo}\nМощность: {power:.1f} W\nИзношенность: {health}%\nЦиклы: {cycles}\nЛКМ — подробности",
+        "tooltip-format-charging": "{capacity}% · до полной: {timeTo}\n{power:.1f} W\nЛКМ — подробности",
+        "tooltip-format-discharging": "{capacity}% · осталось: {timeTo}\n{power:.1f} W\nЛКМ — подробности",
         "tooltip-format-full": "Заряжена полностью",
 
-        "on-click": "tlpui"
+        "on-click": "/home/dima/.config/waybar/scripts/battery-info"
     },
     "backlight": {
         "device": "intel_backlight",
         "format": "{icon} {percent}%",
         "format-icons": ["󰃞", "󰃟", "󰃠"],
+        "tooltip": true,
+        "tooltip-format": "Яркость: {percent}%\nЛКМ — меню · колесо — изменить",
+        "on-click": "/home/dima/.config/waybar/scripts/brightness-menu",
+        "on-click-right": "brightnessctl set 100%",
+        "on-click-middle": "brightnessctl set 50%",
         "on-scroll-up": "brightnessctl set 1%+",
         "on-scroll-down": "brightnessctl set 1%-",
         "smooth-scrolling-threshold": 1

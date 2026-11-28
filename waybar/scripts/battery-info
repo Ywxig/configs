@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Краткая информация о батарее для клика по модулю battery в waybar.
+
+set -u
+
+bat=$(upower -e 2>/dev/null | grep -m1 BAT)
+[ -z "$bat" ] && { notify-send -a waybar "Батарея" "Батарея не найдена"; exit 0; }
+
+fields=$(upower -i "$bat" 2>/dev/null | sed -n \
+  -e 's/^ *state: */Состояние: /p' \
+  -e 's/^ *percentage: */Заряд: /p' \
+  -e 's/^ *time to empty: */Осталось: /p' \
+  -e 's/^ *time to full: */До полной: /p' \
+  -e 's/^ *energy-rate: */Мощность: /p' \
+  -e 's/^ *energy: */Энергия: /p' \
+  -e 's/^ *energy-full: */Ёмкость: /p' \
+  -e 's/^ *voltage: */Напряжение: /p' \
+  -e 's/^ *charge-cycles: */Циклы: /p')
+
+[ -z "$fields" ] && fields="Нет данных от upower"
+
+notify-send -a waybar -i battery "Батарея" "$fields"

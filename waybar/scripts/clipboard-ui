@@ -1,0 +1,467 @@
+#!/usr/bin/env python3
+"""История буфера обмена — всплывающее окно GTK3 + gtk-layer-shell.
+
+Возможности:
+  • поиск по всей истории;
+  • клик или Enter — скопировать запись;
+  • Ctrl+Delete — удалить выбранную, Ctrl+Shift+Delete — очистить всё;
+  • Esc — закрыть.
+
+Историю наполняет clipboard-daemon (wl-paste --watch).
+"""
+
+import os
+import subprocess
+import sys
+import time
+
+import gi
+
+gi.require_version("Gtk", "3.0")
+gi.require_version("Gdk", "3.0")
+gi.require_version("GtkLayerShell", "0.1")
+from gi.repository import Gdk, Gio, GLib, Gtk, GtkLayerShell, Pango  # noqa: E402
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import clipboard_store as store  # noqa: E402
+
+APP_ID = "org.dima.ClipboardHistory"
+TEST_MODE = os.environ.get("CLIPBOARD_UI_TEST") == "1"
+TOP_MARGIN = int(os.environ.get("CLIPBOARD_UI_TOP_MARGIN", "44"))
+
+CSS = b"""
+window { background-color: transparent; }
+
+.panel {
+    background-color: rgba(26, 27, 38, 0.97);
+    border: 1px solid rgba(122, 162, 247, 0.55);
+    border-radius: 14px;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+    padding: 12px;
+}
+
+.header { margin-bottom: 8px; }
+
+.title-icon {
+    color: #7aa2f7;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.title {
+    color: #c0caf5;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.count {
+    color: #565f89;
+    font-size: 11px;
+}
+
+button.ghost {
+    background-image: none;
+    background-color: rgba(192, 202, 245, 0.08);
+    border: 1px solid rgba(192, 202, 245, 0.12);
+    border-radius: 8px;
+    color: #c0caf5;
+    padding: 3px 10px;
+    font-size: 11px;
+    box-shadow: none;
+    text-shadow: none;
+}
+button.ghost:hover {
+    background-color: rgba(242, 85, 90, 0.18);
+    border-color: rgba(242, 85, 90, 0.55);
+    color: #f2555a;
+}
+
+entry.search {
+    background-image: none;
+    background-color: rgba(41, 46, 66, 0.9);
+    border: 1px solid rgba(122, 162, 247, 0.35);
+    border-radius: 9px;
+    color: #c0caf5;
+    caret-color: #7aa2f7;
+    padding: 7px 10px;
+    margin-bottom: 8px;
+    box-shadow: none;
+}
+entry.search:focus { border-color: #7aa2f7; }
+
+scrolledwindow { background: transparent; }
+scrolledwindow undershoot.top,
+scrolledwindow undershoot.bottom { background-image: none; }
+
+list {
+    background: transparent;
+    color: #c0caf5;
+}
+
+row.item {
+    background: transparent;
+    border-radius: 9px;
+    padding: 6px 8px;
+    margin: 1px 0;
+}
+row.item:hover { background-color: rgba(122, 162, 247, 0.10); }
+row.item:selected { background-color: rgba(40, 52, 87, 0.95); }
+row.item:selected .preview { color: #c0caf5; }
+row.item:selected .meta { color: #7aa2f7; }
+
+.preview { color: #c0caf5; font-size: 12px; }
+.meta { color: #565f89; font-size: 10px; margin-top: 2px; }
+
+.empty {
+    color: #565f89;
+    font-size: 12px;
+    padding: 24px 8px;
+}
+
+.footer {
+    color: #565f89;
+    font-size: 10px;
+    margin-top: 8px;
+}
+"""
+
+
+def plural_entries(n):
+    if n % 10 == 1 and n % 100 != 11:
+        return f"{n} запись"
+    if n % 10 in (2, 3, 4) and n % 100 not in (12, 13, 14):
+        return f"{n} записи"
+    return f"{n} записей"
+
+
+def human_time(ts):
+    if not ts:
+        return ""
+    delta = max(0, int(time.time() - ts))
+    if delta < 60:
+        return "только что"
+    if delta < 3600:
+        return f"{delta // 60} мин назад"
+    if delta < 86400:
+        return f"{delta // 3600} ч назад"
+    if delta < 172800:
+        return "вчера"
+    return time.strftime("%d.%m.%Y", time.localtime(ts))
+
+
+def make_preview(text, limit=110):
+    flat = " ".join(text.split())
+    if len(flat) > limit:
+        flat = flat[: limit - 1].rstrip() + "…"
+    return flat
+
+
+def meta_line(entry):
+    text = entry["text"]
+    lines = text.count("\n") + 1
+    parts = [human_time(entry["time"])]
+    if lines > 1:
+        parts.append(f"{lines} строк")
+    if len(text) > 1000:
+        parts.append(f"{len(text) // 1000} тыс. символов")
+    return " · ".join(p for p in parts if p)
+
+
+class ClipboardWindow(Gtk.Window):
+    def __init__(self, app):
+        super().__init__(type=Gtk.WindowType.TOPLEVEL)
+        self.app = app
+        self._entries = []
+        self._rows = []
+        self._clear_armed = False
+
+        self.set_title("Буфер обмена")
+        self.set_decorated(False)
+        self.set_resizable(False)
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+        self.set_type_hint(Gdk.WindowTypeHint.DIALOG)
+        self.set_default_size(560, 460)
+        self.set_size_request(440, 360)
+
+        screen = self.get_screen()
+        visual = screen.get_rgba_visual()
+        if visual is not None:
+            self.set_visual(visual)
+        self.set_app_paintable(True)
+
+        GtkLayerShell.init_for_window(self)
+        GtkLayerShell.set_namespace(self, "clipboard-history")
+        GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
+        GtkLayerShell.set_exclusive_zone(self, -1)
+        GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.TOP, True)
+        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.RIGHT, True)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.TOP, TOP_MARGIN)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.RIGHT, 8)
+
+        self.connect("destroy", self._on_destroy)
+        self.connect("key-press-event", self._on_window_key)
+
+        self._build_ui()
+        self._load_entries()
+
+        if TEST_MODE:
+            GLib.timeout_add(700, app.quit)
+
+    # ------------------------------------------------------------------ UI
+    def _build_ui(self):
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        panel.get_style_context().add_class("panel")
+
+        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        header.get_style_context().add_class("header")
+
+        icon = Gtk.Label(label="\U000f014c")  # nf-md-clipboard_text
+        icon.get_style_context().add_class("title-icon")
+
+        title = Gtk.Label(label="Буфер обмена", xalign=0)
+        title.get_style_context().add_class("title")
+
+        self.count_label = Gtk.Label(xalign=1)
+        self.count_label.get_style_context().add_class("count")
+
+        self.clear_button = Gtk.Button(label="Очистить")
+        self.clear_button.get_style_context().add_class("ghost")
+        self.clear_button.set_relief(Gtk.ReliefStyle.NONE)
+        self.clear_button.set_can_focus(False)
+        self.clear_button.connect("clicked", self._on_clear_clicked)
+
+        header.pack_start(icon, False, False, 0)
+        header.pack_start(title, False, False, 0)
+        header.pack_start(self.count_label, True, True, 0)
+        header.pack_start(self.clear_button, False, False, 0)
+
+        self.search = Gtk.Entry()
+        self.search.set_placeholder_text("Поиск по истории…")
+        self.search.get_style_context().add_class("search")
+        self.search.connect("changed", lambda *_: self._refill())
+        self.search.connect("activate", lambda *_: self._copy_selected())
+        self.search.connect("key-press-event", self._on_entry_key)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_shadow_type(Gtk.ShadowType.NONE)
+        scrolled.set_min_content_height(300)
+        scrolled.set_overlay_scrolling(True)
+
+        self.listbox = Gtk.ListBox()
+        self.listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.listbox.set_activate_on_single_click(True)
+        self.listbox.connect("row-activated", self._on_row_activated)
+        scrolled.add(self.listbox)
+
+        footer = Gtk.Label(
+            label="Enter — копировать · Ctrl+Del — удалить · Ctrl+Shift+Del — очистить · Esc — закрыть",
+            xalign=0,
+        )
+        footer.get_style_context().add_class("footer")
+
+        panel.pack_start(header, False, False, 0)
+        panel.pack_start(self.search, False, False, 0)
+        panel.pack_start(scrolled, True, True, 0)
+        panel.pack_start(footer, False, False, 0)
+
+        self.add(panel)
+
+    # -------------------------------------------------------------- данные
+    def _load_entries(self):
+        self._entries = store.load()
+        self._refill()
+
+    def _visible_entries(self):
+        query = self.search.get_text().strip().casefold()
+        if not query:
+            return self._entries
+        return [e for e in self._entries if query in e["text"].casefold()]
+
+    def _refill(self):
+        for row in list(self._rows):
+            row.destroy()
+        self._rows = []
+
+        visible = self._visible_entries()
+        if not visible:
+            row = Gtk.ListBoxRow()
+            row.set_selectable(False)
+            row.set_activatable(False)
+            label = Gtk.Label(
+                label="Ничего не найдено" if self._entries else "История пуста — скопируйте текст",
+                xalign=0.5,
+            )
+            label.get_style_context().add_class("empty")
+            row.add(label)
+            row.show_all()
+            self.listbox.add(row)
+            self._rows = [row]
+        else:
+            for entry in visible:
+                row = self._make_row(entry)
+                self.listbox.add(row)
+                self._rows.append(row)
+            self.listbox.show_all()
+            self.listbox.select_row(self._rows[0])
+
+        self.count_label.set_text(plural_entries(len(self._entries)))
+
+    def _make_row(self, entry):
+        row = Gtk.ListBoxRow()
+        row.get_style_context().add_class("item")
+        row._entry = entry
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        box.set_margin_start(2)
+        box.set_margin_end(2)
+
+        preview = Gtk.Label(label=make_preview(entry["text"]), xalign=0)
+        preview.set_ellipsize(Pango.EllipsizeMode.END)
+        preview.set_single_line_mode(True)
+        preview.set_max_width_chars(64)
+        preview.get_style_context().add_class("preview")
+
+        meta = Gtk.Label(label=meta_line(entry), xalign=0)
+        meta.get_style_context().add_class("meta")
+
+        box.pack_start(preview, False, False, 0)
+        box.pack_start(meta, False, False, 0)
+        row.add(box)
+
+        tooltip = entry["text"]
+        if len(tooltip) > 4000:
+            tooltip = tooltip[:4000] + "…"
+        row.set_tooltip_text(tooltip)
+        return row
+
+    # ------------------------------------------------------------ действия
+    def _selected_entry(self):
+        row = self.listbox.get_selected_row()
+        return getattr(row, "_entry", None) if row is not None else None
+
+    def _move_selection(self, delta):
+        rows = [r for r in self._rows if getattr(r, "_entry", None) is not None]
+        if not rows:
+            return
+        current = self.listbox.get_selected_row()
+        try:
+            index = rows.index(current)
+        except ValueError:
+            index = 0
+        index = max(0, min(len(rows) - 1, index + delta))
+        self.listbox.select_row(rows[index])
+
+    def _on_row_activated(self, _listbox, row):
+        entry = getattr(row, "_entry", None)
+        if entry is not None:
+            self._copy_text(entry["text"])
+
+    def _copy_selected(self):
+        entry = self._selected_entry()
+        if entry is not None:
+            self._copy_text(entry["text"])
+
+    def _copy_text(self, text):
+        try:
+            subprocess.run(
+                ["wl-copy"],
+                input=text.encode("utf-8"),
+                timeout=3,
+                check=False,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+            print(f"clipboard-ui: не удалось скопировать: {exc}", file=sys.stderr)
+            return
+        self.destroy()
+
+    def _delete_selected(self):
+        entry = self._selected_entry()
+        if entry is None:
+            return
+        store.remove(entry["text"])
+        self._entries = store.load()
+        self._refill()
+
+    def _on_clear_clicked(self, button):
+        if not self._clear_armed:
+            self._clear_armed = True
+            button.set_label("Точно очистить?")
+            GLib.timeout_add(3000, self._disarm_clear)
+            return
+        store.clear()
+        self._entries = []
+        self._refill()
+        self._disarm_clear()
+
+    def _disarm_clear(self):
+        self._clear_armed = False
+        if getattr(self, "clear_button", None) is not None:
+            self.clear_button.set_label("Очистить")
+
+    # ------------------------------------------------------------ клавиши
+    def _on_entry_key(self, _widget, event):
+        key = event.keyval
+        state = event.state
+        ctrl = bool(state & Gdk.ModifierType.CONTROL_MASK)
+        shift = bool(state & Gdk.ModifierType.SHIFT_MASK)
+
+        if key == Gdk.KEY_Escape:
+            self.destroy()
+            return True
+        if key == Gdk.KEY_Down:
+            self._move_selection(1)
+            return True
+        if key == Gdk.KEY_Up:
+            self._move_selection(-1)
+            return True
+        if key == Gdk.KEY_Delete and ctrl and shift:
+            store.clear()
+            self._entries = []
+            self._refill()
+            return True
+        if key == Gdk.KEY_Delete and ctrl:
+            self._delete_selected()
+            return True
+        return False
+
+    def _on_window_key(self, _widget, event):
+        if event.keyval == Gdk.KEY_Escape:
+            self.destroy()
+            return True
+        return False
+
+    # ------------------------------------------------------------- жизнь
+    def _on_destroy(self, _widget):
+        self.app.window = None
+        GLib.idle_add(self.app.quit)
+
+
+class ClipboardApp(Gtk.Application):
+    def __init__(self):
+        super().__init__(
+            application_id=APP_ID,
+            flags=Gio.ApplicationFlags.FLAGS_NONE,
+        )
+        self.window = None
+
+    def do_activate(self):
+        if self.window is None:
+            self.window = ClipboardWindow(self)
+            self.add_window(self.window)
+        else:
+            self.window._load_entries()
+        self.window.show_all()
+        self.window.present()
+        self.window.search.grab_focus()
+
+
+def main():
+    app = ClipboardApp()
+    return app.run(sys.argv)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -83,6 +83,7 @@ spawn-at-startup "xwayland-satellite"
 spawn-sh-at-startup "dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XAUTHORITY"
 
 spawn-at-startup "waybar"
+spawn-at-startup "/home/dima/.config/waybar/scripts/clipboard-daemon"
 spawn-at-startup "awww-daemon"
 spawn-sh-at-startup "awww img Pictures/wallpaper/wallhaven-eo5jko.png --transition-type none"
 spawn-at-startup "mako"
@@ -247,6 +248,9 @@ binds {
 
     Mod+V       { toggle-window-floating; }
     Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+
+    Mod+Alt+V { spawn "/home/dima/.config/waybar/scripts/clipboard-ui"; }
+    Mod+Alt+C { spawn "/home/dima/.config/waybar/scripts/clipboard-daemon" "clear"; }
 
     Mod+W { toggle-column-tabbed-display; }
 
