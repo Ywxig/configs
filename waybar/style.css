@@ -113,17 +113,17 @@ tooltip label { color: @fg; font-weight: normal; }
 
 /* ============ Cava ============ */
 #custom-cava {
-  background-image: linear-gradient(90deg, alpha(@bg, 0.88), alpha(@accent, 0.14));
-  border: 1px solid alpha(@accent, 0.25);
+  /*background-image: linear-gradient(90deg, alpha(@bg, 0.88), alpha(@accent, 0.14));*/
+  /*border: 1px solid alpha(@accent, 0.25);*/
   border-radius: 12px;
-  color: alpha(@fg, 0.65);
-  margin: 3px 4px;
-  padding: 0 10px;
+  /*color: alpha(@fg, 0.65);*/
+  margin: 0px 0px;
+  padding: 0 0px;
   min-width: 78px;
   font-family: 'JetBrainsMono Nerd Font Propo', monospace;
   font-size: 13px;
-  letter-spacing: 0.5px;
-  text-shadow: 0 0 5px alpha(@accent, 0.55);
+  /*letter-spacing: 0.5px;*/
+  /*text-shadow: 0 0 5px alpha(@accent, 0.55);*/
 }
 #custom-cava:hover {
   border-color: alpha(@accent, 0.6);

@@ -3,7 +3,7 @@
     "position": "top",
     "height": 36,
     "spacing": 4,
-    "modules-left": ["image#logo", "custom/power", "niri/workspaces", "custom/cava", "temperature#cpu", "temperature#gpu"],
+    "modules-left": ["image#logo", "custom/power", "niri/workspaces", "temperature#cpu", "temperature#gpu", "custom/cava"],
     "modules-center": ["niri/window"],
     "modules-right": ["network", "backlight", "pulseaudio", "custom/clipboard", "niri/language", "keyboard-state", "clock", "battery"],
 
@@ -39,7 +39,7 @@
     },
     "custom/cava": {
         "exec": "/home/dima/.config/waybar/scripts/cava-waybar",
-        "format": "󰎆 {}",
+        "format": "{}",
         "return-type": "json",
         "restart-interval": 2,
         "tooltip": false,

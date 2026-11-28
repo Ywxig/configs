@@ -77,11 +77,6 @@ def render(values, volume, muted):
         color = mix(BG, color, 0.30 + 0.70 * level)
         parts.append(f'<span foreground="{to_hex(color)}">{BARS[value]}</span>')
 
-    if volume is not None:
-        # Неразрывные пробелы сохраняют ширину, когда значение меняется.
-        padded = f"{volume:>3}".replace(" ", "\u00a0")
-        color = "#f2555a" if muted else "#c0caf5"
-        parts.append(f'  <span foreground="{color}" weight="bold">{padded}%</span>')
     return "".join(parts)
 
 
