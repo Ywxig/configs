@@ -8,11 +8,15 @@
 
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
+import time
 
 CONFIG = os.path.expanduser("~/.config/cava/config-waybar")
+VOLUME_CMD = ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"]
+VOLUME_INTERVAL = 0.5  # опрашиваем громкость два раза в секунду, не на каждом кадре
 BARS = "▁▂▃▄▅▆▇█"  # 0..7, как отдаёт cava с ascii_max_range = 7
 BG = (0x1a, 0x1b, 0x26)
 STOPS = (  # (позиция, цвет) — градиент слева направо
@@ -43,7 +47,26 @@ def to_hex(rgb):
     return "#%02x%02x%02x" % rgb
 
 
-def render(values):
+def get_volume():
+    """Возвращает (процент, выключен ли звук)."""
+    try:
+        output = subprocess.run(
+            VOLUME_CMD, capture_output=True, text=True, timeout=0.5
+        ).stdout
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None, False
+
+    match = re.search(r"Volume:\s*([0-9.]+)", output)
+    if not match:
+        return None, False
+    try:
+        percent = int(round(float(match.group(1)) * 100))
+    except ValueError:
+        return None, False
+    return max(0, min(100, percent)), "[MUTED]" in output
+
+
+def render(values, volume, muted):
     n = max(1, len(values))
     parts = []
     for i, value in enumerate(values):
@@ -53,6 +76,12 @@ def render(values):
         # Тихие столбики приглушены к фону, громкие — яркие.
         color = mix(BG, color, 0.30 + 0.70 * level)
         parts.append(f'<span foreground="{to_hex(color)}">{BARS[value]}</span>')
+
+    if volume is not None:
+        # Неразрывные пробелы сохраняют ширину, когда значение меняется.
+        padded = f"{volume:>3}".replace(" ", "\u00a0")
+        color = "#f2555a" if muted else "#c0caf5"
+        parts.append(f'  <span foreground="{color}" weight="bold">{padded}%</span>')
     return "".join(parts)
 
 
@@ -88,6 +117,9 @@ def main():
         print("cava-waybar: cava не установлена", file=sys.stderr)
         return 1
 
+    volume, muted = get_volume()
+    last_volume_poll = time.monotonic()
+
     try:
         for line in proc.stdout:
             chunks = line.split()
@@ -97,11 +129,20 @@ def main():
                 values = [int(x) for x in chunks]
             except ValueError:
                 continue
-            text = render(values)
+
+            now = time.monotonic()
+            if now - last_volume_poll >= VOLUME_INTERVAL:
+                volume, muted = get_volume()
+                last_volume_poll = now
+
+            text = render(values, volume, muted)
+            tooltip = "Cava"
+            if volume is not None:
+                tooltip = f"Cava · звук {volume}%" + (" · mute" if muted else "")
             try:
                 print(
                     json.dumps(
-                        {"text": text, "class": "cava", "tooltip": "Cava"},
+                        {"text": text, "class": "cava", "tooltip": tooltip},
                         ensure_ascii=False,
                     ),
                     flush=True,
