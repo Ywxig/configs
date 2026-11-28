@@ -3,7 +3,7 @@
     "position": "top",
     "height": 36,
     "spacing": 4,
-    "modules-left": ["image#logo", "custom/power", "niri/workspaces", "temperature#cpu", "temperature#gpu"],
+    "modules-left": ["image#logo", "custom/power", "niri/workspaces", "custom/cava", "temperature#cpu", "temperature#gpu"],
     "modules-center": ["niri/window"],
     "modules-right": ["network", "backlight", "pulseaudio", "custom/clipboard", "niri/language", "keyboard-state", "clock", "battery"],
 
@@ -36,6 +36,14 @@
         "rewrite": {
             "(.*) — (.*)": "$1"
         }
+    },
+    "custom/cava": {
+        "exec": "/home/dima/.config/waybar/scripts/cava-waybar",
+        "format": "󰎆 {}",
+        "return-type": "json",
+        "restart-interval": 2,
+        "tooltip": false,
+        "on-click": "pavucontrol"
     },
     "network": {
         "format-wifi": "\uf1eb  {essid}",

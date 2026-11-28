@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Cava → waybar custom module.
+
+Читает ASCII-вывод cava и превращает его в Pango-разметку:
+каждый столбик окрашен в градиент (cyan → blue → purple) и светится
+ярче, когда громкость выше.
+"""
+
+import json
+import os
+import signal
+import subprocess
+import sys
+
+CONFIG = os.path.expanduser("~/.config/cava/config-waybar")
+BARS = "▁▂▃▄▅▆▇█"  # 0..7, как отдаёт cava с ascii_max_range = 7
+BG = (0x1a, 0x1b, 0x26)
+STOPS = (  # (позиция, цвет) — градиент слева направо
+    (0.0, (0x7d, 0xcf, 0xff)),  # cyan
+    (0.5, (0x7a, 0xa2, 0xf7)),  # blue
+    (1.0, (0xbb, 0x9a, 0xf7)),  # purple
+)
+
+proc = None
+
+
+def mix(a, b, t):
+    return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
+
+
+def gradient(t):
+    for (p0, c0), (p1, c1) in zip(STOPS, STOPS[1:]):
+        if t <= p1:
+            return mix(c0, c1, (t - p0) / (p1 - p0))
+    return STOPS[-1][1]
+
+
+def brighten(rgb, amount):
+    return tuple(round(c + (255 - c) * amount) for c in rgb)
+
+
+def to_hex(rgb):
+    return "#%02x%02x%02x" % rgb
+
+
+def render(values):
+    n = max(1, len(values))
+    parts = []
+    for i, value in enumerate(values):
+        value = max(0, min(len(BARS) - 1, value))
+        level = value / (len(BARS) - 1)
+        color = brighten(gradient(i / max(1, n - 1)), level * 0.35)
+        # Тихие столбики приглушены к фону, громкие — яркие.
+        color = mix(BG, color, 0.30 + 0.70 * level)
+        parts.append(f'<span foreground="{to_hex(color)}">{BARS[value]}</span>')
+    return "".join(parts)
+
+
+def stop(_signum, _frame):
+    if proc is not None and proc.poll() is None:
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        try:
+            proc.wait(timeout=1)
+        except subprocess.TimeoutExpired:
+            os.killpg(proc.pid, signal.SIGKILL)
+    raise SystemExit(0)
+
+
+def main():
+    global proc
+
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGINT, stop)
+
+    try:
+        proc = subprocess.Popen(
+            ["cava", "-p", CONFIG],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            bufsize=1,
+            start_new_session=True,
+        )
+    except FileNotFoundError:
+        print("cava-waybar: cava не установлена", file=sys.stderr)
+        return 1
+
+    try:
+        for line in proc.stdout:
+            chunks = line.split()
+            if not chunks:
+                continue
+            try:
+                values = [int(x) for x in chunks]
+            except ValueError:
+                continue
+            text = render(values)
+            try:
+                print(
+                    json.dumps(
+                        {"text": text, "class": "cava", "tooltip": "Cava"},
+                        ensure_ascii=False,
+                    ),
+                    flush=True,
+                )
+            except BrokenPipeError:
+                return 0
+    finally:
+        if proc.poll() is None:
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
