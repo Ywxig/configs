@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Резервные копии
+*~
+*.bak
+
+# Крупные кэши и данные приложений — не храним в git
+discord/
+obsidian/
+mozilla/
+WarThunder/
+ppsspp/
+GIMP/
+gmic/
+cef_user_data/
+dconf/
+pulse/
+qBittorrent/
+kdeconnect/
+libaccounts-glib/
+menus/
+opencode/
+composer/
+Gaijin/
+Kitware/
+GREYC/
+QtProject/
+krita.org/
+onlyoffice/
+setrixtui/
+tlpui/
+libresprite/
+inkscape/
+audacity/
+uv/
